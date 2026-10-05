@@ -43,6 +43,7 @@ input{font:inherit;font-size:18px;padding:10px;border-radius:8px;border:2px soli
 #ab{top:62px;left:12px;font-size:12px;color:#ffd36a;text-shadow:0 1px 2px #000}
 .dn{left:50%;top:52%;color:#ff5a5a;font-size:34px;font-weight:800;text-shadow:0 2px 6px #000;animation:dn 1s forwards}
 @keyframes dn{from{transform:translate(-50%,0)}to{transform:translate(-50%,-70px);opacity:0}}
+textarea{font:inherit;font-size:14px;padding:10px;border-radius:8px;border:2px solid #c9a24d;background:#0b0f26;color:var(--bone);width:90%;max-width:420px;height:100px;user-select:text;-webkit-user-select:text}
 </style></head><body>
 <div id="lb"><i></i><i></i></div><div id="ut"></div><div id="fl"></div><div id="hf"></div><div id="vg"></div><div id="hud"><div id="bb"><div id="bn"></div><div class="bar"><i id="bh" style="background:#c8324e"></i></div></div>
 <div id="pb"><div id="pt" style="font-size:12px;text-shadow:0 1px 2px #000"></div><div class="bar"><i id="ph" style="background:#4ec96a"></i></div><div class="bar" style="margin-top:4px"><i id="pe" style="background:#4aa8ff"></i></div></div>
@@ -270,27 +271,44 @@ function bossUlt(){const pp=P.g.position,bp=B.g.position,r=()=>(Math.random()-.5
  if(bi===3)for(let i=0;i<9;i++)addZone(pp.x+r(),pp.z+r(),3.4,1.2+i*.2,1.1,0xffe27a);
  if(bi===4){for(let i=0;i<3;i++)addWave(bp,i*.6);for(let i=0;i<7;i++)addZone(pp.x+r(),pp.z+r(),3.6,1.3+i*.25,1.2,0xffffff)}}
 
-function hs(t){let h=5381;t='mb|'+t;for(const c of t)h=((h<<5)+h+c.charCodeAt(0))|0;return String(h)}
+
+let AD=null,TC=0;const PUB={"key_ops": ["verify"], "ext": true, "kty": "EC", "x": "KzEJmhuSctF6ce1_lXPL8RhpLkFE4tc_8BnenDTzqwQ", "y": "hM_hNL2ino3lVaT-FHmPLaxFcoJ8OdFoFmmHXsbzCr8", "crv": "P-256"},DEF={ps:1,bs:1,bd:1,bh:1,bp:1,be:1,god:0,inf:0,nocd:0};
+const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const ub64=t=>Uint8Array.from(atob(t.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+async function verifyCode(code){try{const [a,b]=code.trim().split('.');const k=await crypto.subtle.importKey('jwk',PUB,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+ if(!await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},k,ub64(b),new TextEncoder().encode(a)))return null;
+ const d=JSON.parse(new TextDecoder().decode(ub64(a)));return d.exp&&Date.now()>d.exp?'expired':d}catch(e){return null}}
 function adminUI(msg=''){const ov=$('ov');ov.style.display='flex';
- if(!UN){ov.innerHTML='<h1>Admin</h1><p>'+(SV.pw?'Enter your passcode':'Create a passcode. Only you will know it.')+'</p><input id="pw" type="password" autocomplete="off" placeholder="passcode"><button data-a="'+(SV.pw?'login':'setpw')+'">'+(SV.pw?'Unlock':'Save passcode')+'</button><p style="color:#f88">'+msg+'</p><button data-a="back">Back</button>';return}
- const a=ADM,row=(l,k,o)=>'<h2>'+l+': '+a[k]+'x</h2><div class="row">'+o.map(v=>'<button data-a="set" data-k="'+k+'" data-v="'+v+'" class="'+(a[k]==v?'sel':'')+'">'+v+'x</button>').join('')+'</div>',
- tg=(l,k)=>'<button data-a="tg" data-k="'+k+'" class="'+(a[k]?'sel':'')+'">'+l+': '+(a[k]?'ON':'OFF')+'</button>';
- ov.innerHTML='<h1>Admin</h1><h2>Tata coins: '+fm(SV.coins)+'</h2><div class="row"><input id="amt" type="number" inputmode="numeric" placeholder="amount"><button data-a="give">Give coins</button></div><div class="row"><button data-a="gv" data-v="1000000">+1M</button><button data-a="gv" data-v="100000000">+100M</button><button data-a="gv" data-v="10000000000000">+10T</button></div>'
- +row('My size','ps',[.5,1,2,3,5])+row('Boss size','bs',[.5,1,2,3,5])+row('Boss difficulty','bd',[.1,.5,1,2,5,10])+row('Boss health','bh',[.1,.5,1,5,10,100])+row('Boss power','bp',[.1,.5,1,2,5,10])+row('Boss energy (attack speed)','be',[.25,.5,1,2,3])+['pw','hp','en'].map(k=>'<h2>My '+NM[k]+': '+fm(stat(k))+' (Lv '+SV.up[k]+')</h2><div class="row">'+[['0','Reset'],['1','+1'],['5','+5'],['10','+10'],['max','MAX']].map(q=>'<button data-a="lv" data-k="'+k+'" data-v="'+q[0]+'">'+q[1]+'</button>').join('')+'</div>').join('')+'<h2>Cheats</h2><div class="row">'+tg('God mode','god')+tg('Infinite energy','inf')+tg('No cooldowns','nocd')+'</div><div class="row"><button data-a="reset">Reset admin</button><button data-a="lock">Lock</button><button data-a="back">Back</button></div>'}
-function adminAct(a,d){
- if(a==='open'){adminUI();return}
- if(a==='back'){UN=0;menu();return}
- if(a==='setpw'){const v=$('pw').value;if(v.length<4){adminUI('Use at least 4 characters');return}SV.pw=hs(v);UN=1;save();adminUI();return}
- if(a==='login'){if(hs($('pw').value)===SV.pw){UN=1;adminUI()}else adminUI('Wrong passcode');return}
- if(!UN)return;
- if(a==='give'){const n=Math.floor(+$('amt').value);if(n>0)SV.coins+=n}
- if(a==='gv')SV.coins+=+d.v;
- if(a==='set')ADM[d.k]=+d.v;
- if(a==='tg')ADM[d.k]=ADM[d.k]?0:1;
- if(a==='lv'){const k=d.k;SV.up[k]=d.v==='max'?Math.ceil(Math.log2(CAP/base[k])):d.v==='0'?0:SV.up[k]+(+d.v)}
- if(a==='reset')Object.assign(ADM,{ps:1,bs:1,bd:1,bh:1,bp:1,be:1,god:0,inf:0,nocd:0});
- if(a==='lock')UN=0;
- save();buildP();UN?adminUI():menu()}
+ if(!AD){ov.innerHTML='<h1>Admin</h1><p>Paste your admin code.</p><textarea id="cd" placeholder="admin code"></textarea><button data-a="login">Unlock</button><p style="color:#f88">'+msg+'</p><button data-a="back">Back</button>';return}
+ const c=p=>AD.p.includes('all')||AD.p.includes(p),a=ADM,own=c('setcoins'),rem=own||AD.cmax==null?Infinity:Math.max(0,AD.cmax-(SV.given||0)),
+ row=(l,k,o)=>'<h2>'+l+': '+a[k]+'x</h2><div class="row">'+o.map(v=>'<button data-a="set" data-k="'+k+'" data-v="'+v+'" class="'+(a[k]==v?'sel':'')+'">'+v+'x</button>').join('')+'</div>';
+ let h='<h1>Admin</h1><p>'+(AD.n||'Admin')+(AD.p.includes('all')?' (owner)':' (limited)')+'</p><h2>Tata coins: '+fm(SV.coins)+'</h2>';
+ if(c('coins')||own){h+='<div class="row"><input id="amt" type="number" inputmode="numeric" placeholder="amount"></div>'+(own?'<div class="row"><button data-a="setc">Set exactly</button><button data-a="addc">Add / subtract</button><button data-a="zero">Zero</button></div>':'<div class="row"><button data-a="give">Give coins</button></div><p>Limit left: '+fm(rem)+'</p>')+'<div class="row"><button data-a="gv" data-v="1000000">+1M</button><button data-a="gv" data-v="100000000">+100M</button><button data-a="gv" data-v="10000000000000">+10T</button></div>'}
+ if(c('size'))h+=row('My size','ps',[.5,1,2,3,5]);
+ if(c('bsize'))h+=row('Boss size','bs',[.5,1,2,3,5]);
+ if(c('boss'))h+=row('Boss difficulty','bd',[.1,.5,1,2,5,10])+row('Boss health','bh',[.1,.5,1,5,10,100])+row('Boss power','bp',[.1,.5,1,2,5,10])+row('Boss energy','be',[.25,.5,1,2,3]);
+ if(c('stats'))h+=['pw','hp','en'].map(k=>'<h2>My '+NM[k]+': '+fm(stat(k))+' (Lv '+SV.up[k]+')</h2><div class="row">'+[['0','Reset'],['1','+1'],['5','+5'],['10','+10'],['max','MAX']].map(q=>'<button data-a="lv" data-k="'+k+'" data-v="'+q[0]+'">'+q[1]+'</button>').join('')+'</div>').join('');
+ const t=[['god','God mode'],['inf','Infinite energy'],['nocd','No cooldowns']].filter(q=>c(q[0])).map(q=>'<button data-a="tg" data-k="'+q[0]+'" class="'+(a[q[0]]?'sel':'')+'">'+q[1]+': '+(a[q[0]]?'ON':'OFF')+'</button>').join('');
+ if(t)h+='<h2>Cheats</h2><div class="row">'+t+'</div>';
+ ov.innerHTML=h+'<div class="row"><button data-a="reset">Reset settings</button><button data-a="logout">Log out</button><button data-a="back">Back</button></div>'}
+async function adminAct(a,d){
+ if(a==='back'){menu();return}
+ if(a==='login'){const v=($('cd').value||'').trim(),r=await verifyCode(v);if(r&&r!=='expired'){AD=r;SV.code=v;save();adminUI()}else adminUI(r==='expired'?'This code has expired':'Invalid code');return}
+ if(a==='logout'){AD=null;delete SV.code;Object.assign(ADM,DEF);save();menu();return}
+ if(!AD)return;
+ const c=p=>AD.p.includes('all')||AD.p.includes(p),own=c('setcoins'),lim=own||AD.cmax==null?Infinity:Math.max(0,AD.cmax-(SV.given||0)),MP={ps:'size',bs:'bsize',bd:'boss',bh:'boss',bp:'boss',be:'boss'};
+ const give=n=>{if(n>0&&(c('coins')||own)){n=Math.min(n,lim);SV.coins+=n;if(lim!==Infinity)SV.given=(SV.given||0)+n}};
+ if(a==='give')give(Math.floor(+$('amt').value));
+ if(a==='gv')give(+d.v);
+ if(a==='setc'&&own){const n=Math.floor(+$('amt').value);if(n>=0)SV.coins=n}
+ if(a==='addc'&&own){const n=Math.floor(+$('amt').value);if(n)SV.coins=Math.max(0,SV.coins+n)}
+ if(a==='zero'&&own)SV.coins=0;
+ if(a==='set'&&c(MP[d.k]))ADM[d.k]=+d.v;
+ if(a==='tg'&&c(d.k))ADM[d.k]=ADM[d.k]?0:1;
+ if(a==='lv'&&c('stats')){const k=d.k;SV.up[k]=d.v==='max'?Math.ceil(Math.log2(CAP/base[k])):d.v==='0'?0:SV.up[k]+(+d.v)}
+ if(a==='reset')Object.assign(ADM,DEF);
+ save();buildP();adminUI()}
+verifyCode(SV.code||'').then(r=>{if(r&&r!=='expired')AD=r;else Object.assign(ADM,DEF)});
 function hitFx(d){const h=$('hf');h.style.transition='none';h.style.opacity=1;requestAnimationFrame(()=>{h.style.transition='opacity .5s';h.style.opacity=0});const e=document.createElement('div');e.className='dn';e.textContent='-'+fm(d);$('hud').appendChild(e);setTimeout(()=>e.remove(),1000)}
 function tick(n){const dt=Math.min((n-last)/1000,.05);last=n;clk+=dt;
  if(st==='play')play(dt);else if(st==='end')endAnim(dt);else if(st==='cut')cutUpd(dt);
@@ -305,12 +323,12 @@ function menu(msg){const ov=$('ov');ov.style.display='flex';
  ov.innerHTML=(msg||'<h1>Moonlit Blade 3D</h1>')+'<h2>Tata coins: '+fm(SV.coins)+'</h2><h2>Hero</h2><div class="row">'+H.map((h,i)=>'<button data-h="'+i+'" style="border-bottom:5px solid #'+h.c.toString(16).padStart(6,'0')+'" class="'+(i===hi?'sel':'')+'">'+h.n+'<br><small>'+h.t+'</small></button>').join('')+'</div>'
  +'<p style="opacity:.8;font-size:14px">'+H[hi].sk.map(s=>s[0]).join(' · ')+' · ★ '+H[hi].u[0]+'</p><h2>Upgrades (max '+fm(CAP)+')</h2><div class="row">'+['pw','hp','en'].map(k=>{const mx=stat(k)>=CAP;return '<button data-u="'+k+'" '+(mx||SV.coins<cost(k)?'disabled':'')+'>'+NM[k]+' '+fm(stat(k))+'<br><small>'+(mx?'MAX':'Upgrade '+fm(cost(k)))+'</small></button>'}).join('')+'</div>'
  +'<h2>Fight a boss</h2><div class="row" style="flex-direction:column;align-items:stretch">'+BO.map((b,i)=>'<button data-b="'+i+'">'+b.n+'<br><small>HP '+fm(b.hp)+' · Damage '+b.dmg+' · Reward '+fm(b.rw)+'</small></button>').join('')+'</div>'
- +'<p style="font-size:13px;opacity:.7;max-width:40ch">Drag the left side to move and the right side to turn the camera. Jump over red rings. Keyboard: WASD, Space jump, J attack, 1 to 4 skills, Q/E turn.</p><button data-a="open" style="opacity:.65;font-size:13px;padding:6px 12px">⚙ Admin</button>'}
-$('ov').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;snd(500,'triangle',.08,.1);
+ +'<p style="font-size:13px;opacity:.7;max-width:40ch">Drag the left side to move and the right side to turn the camera. Jump over red rings. Keyboard: WASD, Space jump, J attack, 1 to 4 skills, Q/E turn.</p>'}
+$('ov').onclick=e=>{if(e.target.tagName==='H1'&&st==='menu'){TC++;if(TC>=5){TC=0;adminUI()}return}const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;snd(500,'triangle',.08,.1);
  if(d.h!==undefined){hi=+d.h;buildP();menu()}if(d.u){SV.coins-=cost(d.u);SV.up[d.u]++;save();buildP();menu()}if(d.b!==undefined)begin(+d.b);if(d.a)adminAct(d.a,d)};
 $('btns').addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(b){e.preventDefault();act(+b.dataset.s)}});
 const KM={q:'q',e:'e',w:'w',arrowup:'w',s:'s',arrowdown:'s',a:'a',arrowleft:'a',d:'d',arrowright:'d'};
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();if(KM[k])K[KM[k]]=1;if(k===' '){e.preventDefault();act(5)}if(k==='j')act(0);if(k==='1'||k==='2'||k==='3'||k==='4')act(+k)});
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;const k=e.key.toLowerCase();if(KM[k])K[KM[k]]=1;if(k===' '){e.preventDefault();act(5)}if(k==='j')act(0);if(k==='1'||k==='2'||k==='3'||k==='4')act(+k)});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])K[KM[k]]=0});
 let o0=null;const z=$('zone'),kn=$('knob');
 z.addEventListener('pointerdown',e=>{if(o0)return;o0={id:e.pointerId,x:e.clientX,y:e.clientY};kn.style.display='block';kn.style.left=o0.x+'px';kn.style.top=o0.y+'px';z.setPointerCapture(e.pointerId)});
